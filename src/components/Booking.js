@@ -2,11 +2,13 @@ import React, { Component } from "react";
 import { Button, Table, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input } from 'reactstrap';
 import axios from 'axios';
 import Moment from "moment";
-
+import Select from 'react-select';
 
 class Booking extends Component {
     state = {
         bookings: [],
+        clients: [],
+        books: [],
         newBookingData: {
             client: '',
             book: '',
@@ -20,12 +22,24 @@ class Booking extends Component {
             date: '',
         },
         newBookingModal: false,
+        selectedOption: null,
+        selectedOptionBooks: null,
         editBookingModal: false
     }
     componentWillMount() {
         axios.get('http://localhost:8080/api/booking').then((response) => {
             this.setState({
                 bookings: response.data
+            })
+        });
+        axios.get('http://localhost:8080/api/clients').then((response) => {
+            this.setState({
+                clients: response.data
+            })
+        });
+        axios.get('http://localhost:8080/api/books').then((response) => {
+            this.setState({
+                books: response.data
             })
         });
     }
@@ -84,10 +98,34 @@ class Booking extends Component {
             })
         });
     }
-    date(dateValue){
+    date(dateValue) {
         return dateValue.toString();
     }
+    handleChange = (selectedOption) => {
+        this.setState({ selectedOption });
+        let { newBookingData } = this.state;
+        newBookingData.client = selectedOption.value;
+        this.setState({ newBookingData });
+    }
+    handleChangeBooks = (selectedOptionBooks) => {
+        this.setState({ selectedOptionBooks });
+        let { newBookingData } = this.state;
+        newBookingData.book = selectedOptionBooks.value;
+        this.setState({ newBookingData });
+    }
     render() {
+        const { selectedOption } = this.state;
+        let clients = this.state.clients.map((client) => {
+            return (
+                { value: client.id, label: client.name }
+            )
+        });
+        const { selectedOptionBooks } = this.state;
+        let books = this.state.books.map((book) => {
+            return (
+                { value: book.id, label: book.title }
+            )
+        });
         let bookings = this.state.bookings.map((booking) => {
             let isActive;
             if (!booking.isCancelled) {
@@ -119,21 +157,9 @@ class Booking extends Component {
                     <ModalBody>
                         <FormGroup>
                             <Label for="client">Cliente</Label>
-                            <Input type="number" id="client" value={this.state.newBookingData.client} onChange={(e) => {
-                                let { newBookingData } = this.state;
-
-                                newBookingData.client = e.target.value;
-
-                                this.setState({ newBookingData });
-                            }} />
+                            <Select placeholder="Clique e Selecione" options={clients} id="client" value={selectedOption} onChange={this.handleChange} />
                             <Label for="book">Livro</Label>
-                            <Input type="number" id="book" value={this.state.newBookingData.book} onChange={(e) => {
-                                let { newBookingData } = this.state;
-
-                                newBookingData.book = e.target.value;
-
-                                this.setState({ newBookingData });
-                            }} />
+                            <Select placeholder="Clique e Selecione" id="book" options={books} value={selectedOptionBooks} onChange={this.handleChangeBooks} />
                             <Label for="date">Data</Label>
                             <Input type="date" id="date" value={this.state.newBookingData.date} onChange={(e) => {
                                 let { newBookingData } = this.state;
