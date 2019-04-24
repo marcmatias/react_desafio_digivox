@@ -10,20 +10,19 @@ class Booking extends Component {
         clients: [],
         books: [],
         newBookingData: {
-            client: '',
-            book: '',
-            isCancelled: '',
+            books: '',
             date: ''
         },
         editBookingData: {
             id: '',
-            client: '',
-            book: '',
+            books: '',
             date: '',
         },
         newBookingModal: false,
         selectedOption: null,
+        selectedOptionEdit: null,
         selectedOptionBooks: null,
+        selectedOptionBooksEdit: null,
         editBookingModal: false
     }
     componentWillMount() {
@@ -59,9 +58,9 @@ class Booking extends Component {
 
             this._refreshBookings();
             this.setState({
-                bookings, newBookingModal: false, newBookingData: {
+                bookings, newBookingModal: false, selectedOptionBooks: null, selectedOption: null, newBookingData: {
                     client: '',
-                    book: '',
+                    books: '',
                     date: '',
                 }
             });
@@ -70,15 +69,23 @@ class Booking extends Component {
     updateBooking() {
         axios.post('http://localhost:8080/api/booking', this.state.editBookingData).then((response) => {
             this._refreshBookings();
-
             this.setState({
-                editBookingModal: false, editBookingData: { id: '', client: '', book: '', date: '' }
+                editBookingModal: false, editBookingData: { id: '', client: '', books: '', date: '' }
             })
         })
     }
-    editBooking(id, client, book, date) {
+    editBooking(id, client, books, date) {
+        var options = books;
+        var booksEdit = [];
+        books = [];
+        for (var i = 0, l = options.length; i < l; i++){
+            booksEdit.push({ value:  options[i].id,  label: options[i].title  });
+            books.push(options[i].id);
+        }
+        var clientSelect = {value: client.id, label: client.name };
+        client = client.id;
         this.setState({
-            editBookingData: { id, client, book, date }, editBookingModal: !this.state.editBookingModal
+            editBookingData: { id, client, books, date }, editBookingModal: !this.state.editBookingModal, selectedOptionBooksEdit:  booksEdit, selectedOptionEdit: clientSelect
         });
     }
     deleteBooking(id) {
@@ -107,20 +114,45 @@ class Booking extends Component {
         newBookingData.client = selectedOption.value;
         this.setState({ newBookingData });
     }
+    handleChangeEdit = (selectedOptionEdit) => {
+        this.setState({ selectedOptionEdit });
+        let { editBookingData } = this.state;
+        editBookingData.client = selectedOptionEdit.value;
+        this.setState({ editBookingData });
+    }
     handleChangeBooks = (selectedOptionBooks) => {
+        var options = selectedOptionBooks;
+        var value = [];
+        for (var i = 0, l = options.length; i < l; i++) {
+            value.push(options[i].value);
+        }
+
         this.setState({ selectedOptionBooks });
         let { newBookingData } = this.state;
-        newBookingData.book = selectedOptionBooks.value;
-        this.setState({ newBookingData });
+        newBookingData.books = value;
+        this.setState({ newBookingData });        
+    }
+    handleChangeBooksEdit = (selectedOptionBooksEdit) => {
+        var options = selectedOptionBooksEdit;
+        var value = [];
+        for (var i = 0, l = options.length; i < l; i++) {
+            value.push(options[i].value);
+        }
+        this.setState({ selectedOptionBooksEdit });
+        let { editBookingData } = this.state;
+        editBookingData.books = value;
+        this.setState({ editBookingData });        
     }
     render() {
         const { selectedOption } = this.state;
+        const { selectedOptionEdit } = this.state;
         let clients = this.state.clients.map((client) => {
             return (
                 { value: client.id, label: client.name }
             )
         });
-        const { selectedOptionBooks } = this.state;
+        let { selectedOptionBooks } = this.state;
+        let { selectedOptionBooksEdit } = this.state;
         let books = this.state.books.map((book) => {
             return (
                 { value: book.id, label: book.title }
@@ -128,21 +160,32 @@ class Booking extends Component {
         });
         let bookings = this.state.bookings.map((booking) => {
             let isActive;
-            if (!booking.isCancelled) {
+            if (!booking.cancelled) {
                 isActive = "Ativo";
             } else {
                 isActive = "Cancelado";
             }
             let dateValue = booking.date.values.toString();
+
+            let options = booking.books;
+            let booksTitle = [];
+            for (let i = 0, l = options.length; i < l; i++){
+                if(i !== (l-1)){
+                    booksTitle.push(options[i].title.toString() + ", ");
+                }else{
+                    booksTitle.push(options[i].title.toString());
+                }
+            }
             return (
                 <tr key={booking.id}>
                     <td>{booking.client.name}</td>
-                    <td>{booking.book.title}</td>
+                    <td>{booksTitle}</td>
                     <td>{Moment(dateValue).format('DD/MM/Y')}</td>
                     <td>{isActive}</td>
                     <td>
                         <Button color="info" size="sm" className="mr-2" onClick={this.statusBooking.bind(this, booking.id)}>Status</Button>
-                        <Button color="primary" size="sm" className="mr-2" onClick={this.editBooking.bind(this, booking.id, booking.client.id, booking.book.id, Moment(dateValue).format('Y-MM-DD'))}>Editar</Button>
+                        <Button color="primary" size="sm" className="mr-2" onClick={this.editBooking.bind(this, booking.id, booking.client, booking.books,
+                             Moment(dateValue).format('Y-MM-DD'))}>Editar</Button>
                         <Button color="danger" size="sm" onClick={this.deleteBooking.bind(this, booking.id)}>Deletar</Button>
                     </td>
                 </tr>
@@ -159,7 +202,8 @@ class Booking extends Component {
                             <Label for="client">Cliente</Label>
                             <Select placeholder="Clique e Selecione" options={clients} id="client" value={selectedOption} onChange={this.handleChange} />
                             <Label for="book">Livro</Label>
-                            <Select placeholder="Clique e Selecione" id="book" options={books} value={selectedOptionBooks} onChange={this.handleChangeBooks} />
+                            <Select classNamePrefix="select" className="basic-multi-select" isMulti placeholder="Clique e Selecione" 
+                                id="book" options={books} value={selectedOptionBooks} onChange={this.handleChangeBooks} />
                             <Label for="date">Data</Label>
                             <Input type="date" id="date" value={this.state.newBookingData.date} onChange={(e) => {
                                 let { newBookingData } = this.state;
@@ -180,21 +224,10 @@ class Booking extends Component {
                     <ModalBody>
                         <FormGroup>
                             <Label for="client">Cliente</Label>
-                            <Input type="text" id="client" value={this.state.editBookingData.client} onChange={(e) => {
-                                let { editBookingData } = this.state;
-
-                                editBookingData.client = e.target.value;
-
-                                this.setState({ editBookingData });
-                            }} />
+                            <Select placeholder="Clique e Selecione" options={clients} id="client" value={selectedOptionEdit} onChange={this.handleChangeEdit} />
                             <Label for="book">Book</Label>
-                            <Input type="text" id="book" value={this.state.editBookingData.book} onChange={(e) => {
-                                let { editBookingData } = this.state;
-
-                                editBookingData.book = e.target.value;
-
-                                this.setState({ editBookingData });
-                            }} />
+                            <Select classNamePrefix="select" className="basic-multi-select" isMulti placeholder="Clique e Selecione" 
+                                id="book" options={books} value={selectedOptionBooksEdit} onChange={this.handleChangeBooksEdit} />
                             <Label for="date">Data</Label>
                             <Input type="date" id="date" value={this.state.editBookingData.date} onChange={(e) => {
                                 let { editBookingData } = this.state;
