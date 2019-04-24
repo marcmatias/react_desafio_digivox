@@ -78,14 +78,15 @@ class Booking extends Component {
         var options = books;
         var booksEdit = [];
         books = [];
-        for (var i = 0, l = options.length; i < l; i++){
-            booksEdit.push({ value:  options[i].id,  label: options[i].title  });
+        for (var i = 0, l = options.length; i < l; i++) {
+            booksEdit.push({ value: options[i].id, label: options[i].title });
             books.push(options[i].id);
         }
-        var clientSelect = {value: client.id, label: client.name };
+        var clientSelect = { value: client.id, label: client.name };
         client = client.id;
         this.setState({
-            editBookingData: { id, client, books, date }, editBookingModal: !this.state.editBookingModal, selectedOptionBooksEdit:  booksEdit, selectedOptionEdit: clientSelect
+            editBookingData: { id, client, books, date }, editBookingModal: !this.state.editBookingModal, 
+            selectedOptionBooksEdit: booksEdit, selectedOptionEdit: clientSelect
         });
     }
     deleteBooking(id) {
@@ -130,7 +131,7 @@ class Booking extends Component {
         this.setState({ selectedOptionBooks });
         let { newBookingData } = this.state;
         newBookingData.books = value;
-        this.setState({ newBookingData });        
+        this.setState({ newBookingData });
     }
     handleChangeBooksEdit = (selectedOptionBooksEdit) => {
         var options = selectedOptionBooksEdit;
@@ -141,7 +142,7 @@ class Booking extends Component {
         this.setState({ selectedOptionBooksEdit });
         let { editBookingData } = this.state;
         editBookingData.books = value;
-        this.setState({ editBookingData });        
+        this.setState({ editBookingData });
     }
     render() {
         const { selectedOption } = this.state;
@@ -169,10 +170,10 @@ class Booking extends Component {
 
             let options = booking.books;
             let booksTitle = [];
-            for (let i = 0, l = options.length; i < l; i++){
-                if(i !== (l-1)){
+            for (let i = 0, l = options.length; i < l; i++) {
+                if (i !== (l - 1)) {
                     booksTitle.push(options[i].title.toString() + ", ");
-                }else{
+                } else {
                     booksTitle.push(options[i].title.toString());
                 }
             }
@@ -185,7 +186,7 @@ class Booking extends Component {
                     <td>
                         <Button color="info" size="sm" className="mr-2" onClick={this.statusBooking.bind(this, booking.id)}>Status</Button>
                         <Button color="primary" size="sm" className="mr-2" onClick={this.editBooking.bind(this, booking.id, booking.client, booking.books,
-                             Moment(dateValue).format('Y-MM-DD'))}>Editar</Button>
+                            Moment(dateValue).format('Y-MM-DD'))}>Editar</Button>
                         <Button color="danger" size="sm" onClick={this.deleteBooking.bind(this, booking.id)}>Deletar</Button>
                     </td>
                 </tr>
@@ -202,7 +203,7 @@ class Booking extends Component {
                             <Label for="client">Cliente</Label>
                             <Select placeholder="Clique e Selecione" options={clients} id="client" value={selectedOption} onChange={this.handleChange} />
                             <Label for="book">Livro</Label>
-                            <Select classNamePrefix="select" className="basic-multi-select" isMulti placeholder="Clique e Selecione" 
+                            <Select classNamePrefix="select" className="basic-multi-select" isMulti placeholder="Clique e Selecione"
                                 id="book" options={books} value={selectedOptionBooks} onChange={this.handleChangeBooks} />
                             <Label for="date">Data</Label>
                             <Input type="date" id="date" value={this.state.newBookingData.date} onChange={(e) => {
@@ -226,7 +227,7 @@ class Booking extends Component {
                             <Label for="client">Cliente</Label>
                             <Select placeholder="Clique e Selecione" options={clients} id="client" value={selectedOptionEdit} onChange={this.handleChangeEdit} />
                             <Label for="book">Book</Label>
-                            <Select classNamePrefix="select" className="basic-multi-select" isMulti placeholder="Clique e Selecione" 
+                            <Select classNamePrefix="select" className="basic-multi-select" isMulti placeholder="Clique e Selecione"
                                 id="book" options={books} value={selectedOptionBooksEdit} onChange={this.handleChangeBooksEdit} />
                             <Label for="date">Data</Label>
                             <Input type="date" id="date" value={this.state.editBookingData.date} onChange={(e) => {

@@ -44,9 +44,9 @@ import { NavLink as RRNavLink } from 'react-router-dom';
                         <NavItem>
                             <NavLink tag={RRNavLink} exact to="/reservas">Reservas</NavLink>
                         </NavItem>
-                        {/* <NavItem>
+                        <NavItem>
                             <NavLink tag={RRNavLink} exact to="/alugueis">Aluguéis</NavLink>
-                        </NavItem> */}
+                        </NavItem>
                     </Nav>
                 </Collapse>
             </Navbar>

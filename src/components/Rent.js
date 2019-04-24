@@ -1,11 +1,14 @@
 import React, { Component } from "react";
-import { Button, Table, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label, Input } from 'reactstrap';
+import { Button, Table, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Label } from 'reactstrap';
 import axios from 'axios';
 import Moment from "moment";
+import Select from 'react-select';
 
 class Rent extends Component {
     state = {
         rents: [],
+        clients: [],
+        books: [],
         newRentData: {
             book: '',
             client: '',
@@ -15,13 +18,28 @@ class Rent extends Component {
             book: '',
             client: '',
         },
+        
         newRentModal: false,
+        selectedOption: null,
+        selectedOptionEdit: null,
+        selectedOptionBooks: null,
+        selectedOptionBooksEdit: null,
         editRentModal: false
     }
     componentWillMount() {
         axios.get('http://localhost:8080/api/rent').then((response) => {
             this.setState({
                 rents: response.data
+            })
+        });
+        axios.get('http://localhost:8080/api/clients').then((response) => {
+            this.setState({
+                clients: response.data
+            })
+        });
+        axios.get('http://localhost:8080/api/books').then((response) => {
+            this.setState({
+                books: response.data
             })
         });
     }
@@ -57,13 +75,28 @@ class Rent extends Component {
             })
         })
     }
-    editRent(id, book, client) {
+    editRent(id, books, client) {
+        var options = books;
+        var booksEdit = [];
+        books = [];
+        for (var i = 0, l = options.length; i < l; i++) {
+            booksEdit.push({ value: options[i].id, label: options[i].title });
+            books.push(options[i].id);
+        }
+        var clientSelect = { value: client.id, label: client.name };
+        client = client.id;
         this.setState({
-            editRentData: { id, book, client }, editRentModal: !this.state.editRentModal
+            editRentData: { id, books, client }, editRentModal: !this.state.editRentModal, 
+            selectedOptionBooksEdit: booksEdit, selectedOptionEdit: clientSelect
         });
     }
     deleteRent(id) {
         axios.delete('http://localhost:8080/api/rent/' + id).then((response) => {
+            this._refreshRents();
+        });
+    }
+    statusRent(id) {
+        axios.put('http://localhost:8080/api/rent/status/' + id).then((response) => {
             this._refreshRents();
         });
     }
@@ -74,17 +107,83 @@ class Rent extends Component {
             })
         });
     }
+    handleChange = (selectedOption) => {
+        this.setState({ selectedOption });
+        let { newRentData } = this.state;
+        newRentData.client = selectedOption.value;
+        this.setState({ newRentData });
+    }
+    handleChangeEdit = (selectedOptionEdit) => {
+        this.setState({ selectedOptionEdit });
+        let { editRentData } = this.state;
+        editRentData.client = selectedOptionEdit.value;
+        this.setState({ editRentData });
+    }
+    handleChangeBooks = (selectedOptionBooks) => {
+        var options = selectedOptionBooks;
+        var value = [];
+        for (var i = 0, l = options.length; i < l; i++) {
+            value.push(options[i].value);
+        }
+
+        this.setState({ selectedOptionBooks });
+        let { newRentData } = this.state;
+        newRentData.books = value;
+        this.setState({ newRentData });
+    }
+    handleChangeBooksEdit = (selectedOptionBooksEdit) => {
+        var options = selectedOptionBooksEdit;
+        var value = [];
+        for (var i = 0, l = options.length; i < l; i++) {
+            value.push(options[i].value);
+        }
+        this.setState({ selectedOptionBooksEdit });
+        let { editRentData } = this.state;
+        editRentData.books = value;
+        this.setState({ editRentData });
+    }
     render() {
+        const { selectedOption } = this.state;
+        const { selectedOptionEdit } = this.state;
+        let clients = this.state.clients.map((client) => {
+            return (
+                { value: client.id, label: client.name }
+            )
+        });
+        let { selectedOptionBooks } = this.state;
+        let { selectedOptionBooksEdit } = this.state;
+        let books = this.state.books.map((book) => {
+            return (
+                { value: book.id, label: book.title }
+            )
+        });
         let rents = this.state.rents.map((rent) => {
+            let isActive;
+            if (!rent.returned) {
+                isActive = "Ativo";
+            } else {
+                isActive = "Cancelado";
+            }
+            let options = rent.books;
+            let booksTitle = [];
+            for (let i = 0, l = options.length; i < l; i++) {
+                if (i !== (l - 1)) {
+                    booksTitle.push(options[i].title.toString() + ", ");
+                } else {
+                    booksTitle.push(options[i].title.toString());
+                }
+            }
             return (
                 <tr key={rent.id}>
-                    <td>{rent.book.title}</td>
+                    <td>{booksTitle}</td>
                     <td>{rent.client.name}</td>
                     <td>R${rent.price}</td>
                     <td>{Moment(rent.startDate.values.toString()).format('DD/MM/Y')}</td>
                     <td>{Moment(rent.devolutionDate.values.toString()).format('DD/MM/Y')}</td>
+                    <td>{isActive}</td>
                     <td>
-                        <Button color="primary" size="sm" className="mr-2" onClick={this.editRent.bind(this, rent.id, rent.book.id, rent.client.id)}>Editar</Button>
+                        <Button color="info" size="sm" className="mr-2" onClick={this.statusRent.bind(this, rent.id)}>Status</Button>
+                        <Button color="primary" size="sm" className="mr-2" onClick={this.editRent.bind(this, rent.id, rent.books, rent.client)}>Editar</Button>
                         <Button color="danger" size="sm" onClick={this.deleteRent.bind(this, rent.id)}>Deletar</Button>
                     </td>
                 </tr>
@@ -99,21 +198,10 @@ class Rent extends Component {
                     <ModalBody>
                         <FormGroup>
                             <Label for="client">Cliente</Label>
-                            <Input type="text" id="client" value={this.state.newRentData.client} onChange={(e) => {
-                                let { newRentData } = this.state;
-
-                                newRentData.client = e.target.value;
-
-                                this.setState({ newRentData });
-                            }} />
+                            <Select placeholder="Clique e Selecione" options={clients} id="client" value={selectedOption} onChange={this.handleChange} />
                             <Label for="book">Livro</Label>
-                            <Input type="text" id="book" value={this.state.newRentData.book} onChange={(e) => {
-                                let { newRentData } = this.state;
-
-                                newRentData.book = e.target.value;
-
-                                this.setState({ newRentData });
-                            }} />
+                            <Select classNamePrefix="select" className="basic-multi-select" isMulti placeholder="Clique e Selecione"
+                                id="book" options={books} value={selectedOptionBooks} onChange={this.handleChangeBooks} />
                         </FormGroup>
                     </ModalBody>
                     <ModalFooter>
@@ -126,21 +214,10 @@ class Rent extends Component {
                     <ModalBody>
                         <FormGroup>
                             <Label for="client">Cliente</Label>
-                            <Input type="text" id="client" value={this.state.editRentData.client} onChange={(e) => {
-                                let { editRentData } = this.state;
-
-                                editRentData.client = e.target.value;
-
-                                this.setState({ editRentData });
-                            }} />
+                            <Select placeholder="Clique e Selecione" options={clients} id="client" value={selectedOptionEdit} onChange={this.handleChangeEdit} />
                             <Label for="book">Livro</Label>
-                            <Input type="text" id="book" value={this.state.editRentData.book} onChange={(e) => {
-                                let { editRentData } = this.state;
-
-                                editRentData.book = e.target.value;
-
-                                this.setState({ editRentData });
-                            }} />
+                            <Select classNamePrefix="select" className="basic-multi-select" isMulti placeholder="Clique e Selecione"
+                                id="book" options={books} value={selectedOptionBooksEdit} onChange={this.handleChangeBooksEdit} />
                         </FormGroup>
                     </ModalBody>
                     <ModalFooter>
@@ -156,6 +233,7 @@ class Rent extends Component {
                             <th>Preço</th>
                             <th>Alugado</th>
                             <th>Devolução</th>
+                            <th>Status</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
