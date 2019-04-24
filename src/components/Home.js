@@ -69,6 +69,12 @@ class Home extends Component {
                     booksTitle.push(options[i].title.toString());
                 }
             }
+            let isActive;
+            if (!rent.returned) {
+                isActive = { label: "Alugado", value: false};
+            } else {
+                isActive = { label: "Devolvido", value: true};
+            }
             return (
                 <tr key={rent.id}>
                     <td>{booksTitle}</td>
@@ -76,6 +82,7 @@ class Home extends Component {
                     <td>R${rent.price}</td>
                     <td>{Moment(rent.startDate.values.toString()).format('DD/MM/Y')}</td>
                     <td>{Moment(rent.devolutionDate.values.toString()).format('DD/MM/Y')}</td>
+                    <td>{isActive.label}</td>
                 </tr>
             )
         });
@@ -90,6 +97,12 @@ class Home extends Component {
                     booksTitle.push(options[i].title.toString());
                 }
             }
+            let isActive;
+            if (!rent.returned) {
+                isActive = { label: "Alugado", value: false};
+            } else {
+                isActive = { label: "Devolvido", value: true};
+            }
             return (
                 <tr key={rent.id}>
                     <td>{booksTitle}</td>
@@ -97,6 +110,7 @@ class Home extends Component {
                     <td>R${rent.price}</td>
                     <td>{Moment(rent.startDate.values.toString()).format('DD/MM/Y')}</td>
                     <td>{Moment(rent.devolutionDate.values.toString()).format('DD/MM/Y')}</td>
+                    <td>{isActive.label}</td>
                 </tr>
             )
         });
@@ -126,6 +140,7 @@ class Home extends Component {
                             <th>Preço</th>
                             <th>Alugado</th>
                             <th>Devolução</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody className="text-center">
@@ -141,6 +156,7 @@ class Home extends Component {
                             <th>Preço</th>
                             <th>Alugado</th>
                             <th>Devolução</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody className="text-center">

@@ -162,9 +162,9 @@ class Booking extends Component {
         let bookings = this.state.bookings.map((booking) => {
             let isActive;
             if (!booking.cancelled) {
-                isActive = "Ativo";
+                isActive = { label: "Reservado", value: false};
             } else {
-                isActive = "Cancelado";
+                isActive = { label: "Cancelado", value: true};
             }
             let dateValue = booking.date.values.toString();
 
@@ -182,9 +182,9 @@ class Booking extends Component {
                     <td>{booking.client.name}</td>
                     <td>{booksTitle}</td>
                     <td>{Moment(dateValue).format('DD/MM/Y')}</td>
-                    <td>{isActive}</td>
+                    <td>{isActive.label}</td>
                     <td>
-                        <Button color="info" size="sm" className="mr-2" onClick={this.statusBooking.bind(this, booking.id)}>Status</Button>
+                        <Button color="info" disabled={isActive.value} size="sm" className="mr-2" onClick={this.statusBooking.bind(this, booking.id)}>Status</Button>
                         <Button color="primary" size="sm" className="mr-2" onClick={this.editBooking.bind(this, booking.id, booking.client, booking.books,
                             Moment(dateValue).format('Y-MM-DD'))}>Editar</Button>
                         <Button color="danger" size="sm" onClick={this.deleteBooking.bind(this, booking.id)}>Deletar</Button>

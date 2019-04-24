@@ -111,7 +111,7 @@ class Rent extends Component {
         this.setState({ selectedOption });
         let { newRentData } = this.state;
         newRentData.client = selectedOption.value;
-        this.setState({ newRentData });
+        this.setState({ newRentData }); 
     }
     handleChangeEdit = (selectedOptionEdit) => {
         this.setState({ selectedOptionEdit });
@@ -160,9 +160,9 @@ class Rent extends Component {
         let rents = this.state.rents.map((rent) => {
             let isActive;
             if (!rent.returned) {
-                isActive = "Ativo";
+                isActive = { label: "Alugado", value: false};
             } else {
-                isActive = "Cancelado";
+                isActive = { label: "Devolvido", value: true};
             }
             let options = rent.books;
             let booksTitle = [];
@@ -180,9 +180,9 @@ class Rent extends Component {
                     <td>R${rent.price}</td>
                     <td>{Moment(rent.startDate.values.toString()).format('DD/MM/Y')}</td>
                     <td>{Moment(rent.devolutionDate.values.toString()).format('DD/MM/Y')}</td>
-                    <td>{isActive}</td>
+                    <td>{isActive.label}</td>
                     <td>
-                        <Button color="info" size="sm" className="mr-2" onClick={this.statusRent.bind(this, rent.id)}>Status</Button>
+                        <Button color="info" disabled={isActive.value} size="sm" className="mr-2" onClick={this.statusRent.bind(this, rent.id)}>Status</Button>
                         <Button color="primary" size="sm" className="mr-2" onClick={this.editRent.bind(this, rent.id, rent.books, rent.client)}>Editar</Button>
                         <Button color="danger" size="sm" onClick={this.deleteRent.bind(this, rent.id)}>Deletar</Button>
                     </td>
